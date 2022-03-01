@@ -12,8 +12,7 @@ public class GameManager : MonoBehaviour
     public Rigidbody PlayerRb;
     public Rigidbody[] Balls = new Rigidbody[15];
     public Camera MainCamera;
-    public float Force = 4;
-    public float Direction = 270;
+    public float Force = 4, Direction = 270, Heading, Height;
     public int GameState;
     public int Turn;
     public int Player1 = 0;
@@ -22,8 +21,10 @@ public class GameManager : MonoBehaviour
     public Text[] PRs = new Text[2];
     public Text ForceText;
     public Text Guide;
+    public Text GameOver;
     public Scrollbar ForceScale;
     public AudioSource AudioSource;
+    public int Captured = 0;
 
     // Start is called before the first frame update
     void Start()
@@ -36,31 +37,23 @@ public class GameManager : MonoBehaviour
         }
         ForceScale.size = Force / 20;
         AudioSource.Play();
+        GameOver.gameObject.SetActive(false);
+        PRs[0].fontSize = 35;
+        PRs[1].fontSize = 20;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (Turn == 0)
-        {
-            PRs[0].fontSize = 35;
-            PRs[1].fontSize = 20;
-        }
-        else
-        {
-            PRs[1].fontSize = 35;
-            PRs[0].fontSize = 20;
-        }
-
         if (GameState == 0)
         {
             // Adjusting the camera
-            float angle = (float)((Direction + 30) * Math.PI / 180);
+            float angle = (float)((Direction + 10) * Math.PI / 180);
             Vector3 position;
 
-            position.x = (float)(Player.transform.position.x - 1.8f * Math.Sin(angle));
-            position.z = (float)(Player.transform.position.z - 1.8f * Math.Cos(angle));
-            position.y = Player.transform.position.y + 0.6f;
+            position.x = (float)(Player.transform.position.x - 2.4f * Math.Sin(angle));
+            position.z = (float)(Player.transform.position.z - 2.4f * Math.Cos(angle));
+            position.y = Player.transform.position.y + 1.2f;
 
             MainCamera.transform.position = position;
             MainCamera.transform.rotation = Quaternion.Euler(0, Direction, 0);
@@ -94,10 +87,10 @@ public class GameManager : MonoBehaviour
 
                 Vector3 cameraPosition;
                 cameraPosition.x = 0;
-                cameraPosition.y = 2.9f;
-                cameraPosition.z = -4;
+                cameraPosition.y = 4.2f;
+                cameraPosition.z = -4.1f;
                 MainCamera.transform.position = cameraPosition;
-                MainCamera.transform.rotation = Quaternion.Euler(30, 0, 0);
+                MainCamera.transform.rotation = Quaternion.Euler(35, 0, 0);
                 Trail.SetActive(false);
                 ForceText.gameObject.SetActive(false);
                 ForceScale.gameObject.SetActive(false);
@@ -107,7 +100,7 @@ public class GameManager : MonoBehaviour
 
             ForceScale.size = Force / 20;
         }
-        else // If GameState == 1
+        else if (GameState == 1)
         {
             if (Math.Abs(PlayerRb.velocity.x) > 0.001
                 || Math.Abs(PlayerRb.velocity.y) > 0.001
@@ -124,6 +117,7 @@ public class GameManager : MonoBehaviour
             {
                 if (TakenBalls[i] == false && Balls[i].position.y < 0.15)
                 {
+                    ++Captured;
                     if (Turn == 0)
                         ++Player1;
                     else
@@ -143,10 +137,27 @@ public class GameManager : MonoBehaviour
             PRs[1].text = "Player 2: " + Player2;
             GameState = 0;
             Turn = Turn == 0 ? 1 : 0;
+            if (Captured == 15)
+            {
+                GameOver.gameObject.SetActive(true);
+                GameState = 2;
+                return;
+            }
             Trail.SetActive(true);
             ForceText.gameObject.SetActive(true);
             ForceScale.gameObject.SetActive(true);
             Guide.gameObject.SetActive(true);
+
+            if (Turn == 0)
+            {
+                PRs[0].fontSize = 35;
+                PRs[1].fontSize = 20;
+            }
+            else
+            {
+                PRs[1].fontSize = 35;
+                PRs[0].fontSize = 20;
+            }
         }
     }
 }
